@@ -28,7 +28,7 @@ const textDecoder = new TextDecoder()
 const socket = new WebSocket(
     "wss://" +
         Deno.env.get("SERVER_HOST") +
-        ":7531/connect?module=moduleTemplate&events=&secret=" +
+        ":7531/connect?module=joinAlerts&events=team_join&secret=" +
         encodeURIComponent(Deno.env.get("CONNECTION_SECRET")!),
 )
 
@@ -59,5 +59,19 @@ socket.addEventListener("message", async (ev) => {
         const eventData = JSON.parse(
             data.split("event ").slice(1).join("event "),
         )
+        if (eventData.type == "team_join") {
+            console.log(eventData)
+            await fetch("https://slack.com/api/chat.postMessage", {
+                method: "POST",
+                headers: {
+                    Authorization: "Bearer " + xoxb,
+                    "Content-Type": "application/json; charset=utf-8",
+                },
+                body: JSON.stringify({
+                    channel: "C09T915K406",
+                    text: `<@${eventData.user.id}> joined the Slack!`,
+                }),
+            })
+        }
     }
 })
